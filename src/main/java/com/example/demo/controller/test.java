@@ -10,7 +10,7 @@ public class test {
 
     @GetMapping
     public  String getDtring(){
-        return "hello word";
+        return "hello Ilias el amrani";
     }
 
 }

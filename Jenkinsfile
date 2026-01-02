@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     tools {
-        jdk 'JDK21'
-        maven 'Maven3'
+        jdk 'JDK21'      // Nom de ton JDK configuré dans Jenkins
+        maven 'Maven3'   // Nom de Maven configuré dans Jenkins
     }
 
     environment {
@@ -14,7 +14,8 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/ton-utilisateur/ton-projet.git'
+                // Pour un dépôt public, pas besoin de credentials
+                git branch: 'main', url: 'https://github.com/younes200444/projet.git'
             }
         }
 

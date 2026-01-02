@@ -1,10 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            image 'eclipse-temurin:21-jdk-jammy'  // Maven + Java 21
-            args '-v /var/run/docker.sock:/var/run/docker.sock'
-        }
-    }
+    agent any
 
     environment {
         DOCKER_IMAGE = "springboot-app:latest"
@@ -18,24 +13,17 @@ pipeline {
             }
         }
 
-        stage('Build with Maven') {
+        stage('Build with Maven inside Docker') {
             steps {
-                // utilise le Maven Wrapper fourni dans ton projet
-                sh './mvnw clean package -DskipTests'
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                sh "docker build -t $DOCKER_IMAGE ."
-            }
-        }
-
-        stage('Run Docker Container') {
-            steps {
-                sh "docker stop $CONTAINER_NAME || true"
-                sh "docker rm $CONTAINER_NAME || true"
-                sh "docker run -d --name $CONTAINER_NAME -p 8081:8080 $DOCKER_IMAGE"
+                script {
+                    docker.image('eclipse-temurin:21-jdk-jammy').inside('-v /var/run/docker.sock:/var/run/docker.sock') {
+                        sh './mvnw clean package -DskipTests'
+                        sh "docker build -t $DOCKER_IMAGE ."
+                        sh "docker stop $CONTAINER_NAME || true"
+                        sh "docker rm $CONTAINER_NAME || true"
+                        sh "docker run -d --name $CONTAINER_NAME -p 8081:8080 $DOCKER_IMAGE"
+                    }
+                }
             }
         }
     }

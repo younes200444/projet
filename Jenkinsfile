@@ -1,50 +1,51 @@
 pipeline {
-    agent {
-        docker {
-            image 'eclipse-temurin:21-jdk-jammy' // Maven + Java 21
-            args '-v /var/run/docker.sock:/var/run/docker.sock' // accès Docker sur hôte
-        }
+    agent any
+
+    tools {
+        jdk 'JDK21'
+        maven 'Maven3'
     }
 
     environment {
-        DOCKER_IMAGE = "springboot-app:latest"
-        CONTAINER_NAME = "springboot-app"
+        IMAGE_NAME = "springboot-app"
+        IMAGE_TAG = "latest"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/TON_USER/TON_PROJET.git'
+                git 'https://github.com/ton-utilisateur/ton-projet.git'
             }
         }
 
-        stage('Build with Maven') {
+        stage('Build') {
             steps {
-                sh './mvnw clean package -DskipTests'
+                sh 'mvn clean package -DskipTests'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t $DOCKER_IMAGE ."
+                sh '''
+                docker build -t $IMAGE_NAME:$IMAGE_TAG .
+                '''
             }
         }
 
         stage('Run Docker Container') {
             steps {
-                sh "docker stop $CONTAINER_NAME || true"
-                sh "docker rm $CONTAINER_NAME || true"
-                sh "docker run -d --name $CONTAINER_NAME -p 8081:8080 $DOCKER_IMAGE"
+                sh '''
+                docker stop springboot-container || true
+                docker rm springboot-container || true
+                docker run -d -p 8081:8080 --name springboot-container $IMAGE_NAME:$IMAGE_TAG
+                '''
             }
         }
     }
 
     post {
-        success {
-            echo "✅ Build et déploiement réussis !"
-        }
-        failure {
-            echo "❌ Build ou déploiement échoué !"
+        always {
+            echo 'Pipeline finished!'
         }
     }
 }
